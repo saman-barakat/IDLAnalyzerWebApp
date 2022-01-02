@@ -1,0 +1,370 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Language" content="en-us">
+<title>IDL Analyzer</title>
+<link rel="stylesheet" type="text/css" href="xtext/2.25.0/xtext-ace.css" />
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link rel="stylesheet" type="text/css"
+	href="/webjars/bootstrap/5.1.0/css/bootstrap.min.css" />
+<script src="/webjars/js-yaml/4.1.0/dist/js-yaml.min.js"></script>
+<script src="/webjars/requirejs/2.3.6/require.min.js"></script>
+<script src="/webjars/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+		<div class="container-fluid">
+
+			<a class="navbar-brand" href="/"> <img
+				src="imgs/IDL-logo.png"
+				alt="" width="64" height="64">
+			</a>
+
+			<button class="navbar-toggler" type="button"
+				data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+				aria-controls="navbarSupportedContent" aria-expanded="false"
+				aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarSupportedContent">
+				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+					<li class="nav-item"><a class="nav-link active"
+						aria-current="page" href="/">Home</a></li>
+
+				</ul>
+
+			</div>
+		</div>
+	</nav>
+	<main>
+
+		<div class="container py-4">
+
+
+			<div class="p-5 mb-4 bg-light rounded-3">
+				<div class="container-fluid py-3">
+					<h1 class="display-5 fw-bold">Analyze your API!</h1>
+
+				</div>
+			</div>
+
+			<div class="row">
+				<div id="messageBoxID"></div>
+				<div class="col-md-7">
+
+
+					<form id="idlFormID">
+
+						<div class="mb-3">
+							<div class="form-group">
+								<input type="hidden" name="entry" value="oas"
+									id="specificationTypeID">
+							</div>
+						</div>
+
+						<div class="mb-3">
+							<div class="form-group">
+								<input type="hidden" name="methodType" value="get"
+									id="methodType">
+							</div>
+						</div>
+
+						<div class="mb-3">
+							<div class="form-group">
+								<label for="operationTypeID" class="form-label">Operation
+									Types*</label> <select class="form-select  mb-3 form-control"
+									id="operationTypeID">
+
+									<option value="PUT">Put</option>
+									<option value="POST">Post</option>
+									<option value="PATCH">Path</option>
+									<option value="OPTIONS">Options</option>
+									<option value="HEAD">Head</option>
+									<option value="DELETE">Delete</option>
+									<option value="GET" selected>Get</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="mb-3">
+							<div class="form-group">
+								<label for="operationPath" class="form-label">Operation
+									Path* </label> <input type="text" class="form-control mb-3"
+									id="operationPathID" value="/oneDependencyRequires">
+								<div class="invalid-feedback">Please insert operation
+									path.</div>
+							</div>
+						</div>
+
+						<div id="div_idlParametersID" class="form-group">
+							<label for="idlParametersID" class=""> Parameter to
+								analyze </label>
+							<div class="">
+								<input type="text" name="parameter"
+									class="textinput textInput form-control" id="idlParametersID"
+									value="p1">
+								<div class="invalid-feedback">Please insert IDL parameter.
+								</div>
+							</div>
+						</div>
+
+						<div class="mb-3"></div>
+						<div class="mb-3">
+							<div class="form-group">
+								<label for="apiSpecificationID" class="form-label"> API
+									Specification (YAML/JSON or URL to YAML/JSON)*</label>
+								<textarea class="form-control" id="apiSpecificationID" rows="6">https://raw.githubusercontent.com/saman-barakat/IDLAnalyzer-REST-API/main/src/test/resources/OAS_test_suite.yaml</textarea>
+								<div class="invalid-feedback">Please insert API
+									specification.</div>
+							</div>
+						</div>
+
+					</form>
+
+				</div>
+				<div class="col-md-5">
+					<div id="idlMessageBoxID"></div>
+					<div class="row">
+						<h2 class="display-6 fw-bold text-center">IDL Editor</h2>
+
+
+						<div class="h-100 container-fluid">
+
+							<div style="height: 400px;" id="xtext-editor"
+								data-editor-xtext-lang="idl"
+								data-editor-show-error-dialogs="true">IF p1 THEN p2;</div>
+								 <div class="invalid-feedback">Please check the IDL editor.</div>
+
+						</div>
+					</div>
+
+				</div>
+
+			</div>
+			<div class="row">
+				 
+				<div class="col-md-12">
+					<button class="btn btn-primary mb-2" id="validSpecificationBtnID" value="isValidSpecification">Is
+						Valid Specification</button>
+					<button class="btn btn-primary mb-2" id="consistentBtnID" value="isConsistent">Is
+						Consistent</button>
+					<button class="btn btn-primary mb-2" id="falseOptionalBtnID" value="isFalseOptional">Is
+						False Optional</button>
+					<button class="btn btn-primary mb-2" id="deadParameterBtnID" value="isDeadParameter">Is
+						Dead Parameter</button>
+				</div>
+			
+			</div>
+
+			<footer class="pt-3 mt-4 text-muted border-top"> &copy; 2021
+			</footer>
+
+
+		</div>
+	</main>
+	<script type="text/javascript">
+	 
+	var baseUrl = window.location.pathname;
+	var fileIndex = baseUrl.indexOf("index.html");
+	if (fileIndex > 0)
+		baseUrl = baseUrl.slice(0, fileIndex);
+	require.config({
+				baseUrl : baseUrl,
+				paths : {
+					"jquery" : "webjars/jquery/3.5.1/jquery.min",
+					"ace/ext/language_tools" : "webjars/ace/1.3.3/src/ext-language_tools",
+					"xtext/xtext-ace" : "xtext/2.25.0/xtext-ace"
+				}
+			});
+	
+	require([ "webjars/ace/1.3.3/src/ace" ], function() {
+		require([ "xtext/xtext-ace" ], function(xtext) {
+			var editor =   xtext.createEditor({
+				baseUrl : baseUrl,
+				syntaxDefinition : "xtext-resources/generated/mode-idl",
+			 
+				validate: true
+				 
+			});
+				
+			$(document).ready(function() {
+
+				// Analysis Operations
+				
+				$("#validSpecificationBtnID,#consistentBtnID,#falseOptionalBtnID,#deadParameterBtnID").click(function(event) {
+					
+				 event.preventDefault();
+					var valid = true;
+					
+					
+					var editorLines = editor.selection.doc.$lines;
+					var errors = editor.xtextServices. editorContext._annotations; 
+					var lines = [];
+					
+					if(editorLines != ""){
+					for(i=0;i<editorLines.length;i++){
+						var line = $.trim(editorLines[i]);
+						if(line != "")
+							lines.push(line);
+					}	
+					}
+				
+						var analysisOperation = $('#'+this.id).val();
+						var uri = 'https://idl-analyzer-api.herokuapp.com/api/'+ analysisOperation;
+						var apiSpecification = $("#apiSpecificationID").val();
+						var operationPath = $("#operationPathID").val();
+						var operationType = $("#operationTypeID").val();
+						var parameter = $("#idlParametersID").val();
+
+						
+						if(operationPath == ""){
+							$("#operationPathID").addClass("is-invalid");
+							valid =false;}
+						else
+							$("#operationPathID").removeClass("is-invalid");
+						
+						if(apiSpecification == ""){
+							$("#apiSpecificationID").addClass("is-invalid");
+							valid =false;
+						}
+						else
+							$("#apiSpecificationID").removeClass("is-invalid");
+						
+					// Check The editor
+					if(errors.length > 0 || lines.length === 0){
+						$("#xtext-editor").addClass("is-invalid");
+						valid =false;
+					}else 
+						$("#xtext-editor").removeClass("is-invalid");
+
+					if(analysisOperation == "isFalseOptional" || analysisOperation == "isDeadParameter" ){
+						if(parameter == ""){
+							$("#idlParametersID").addClass("is-invalid");
+							valid =false;
+						}
+						else
+							$("#idlParametersID").removeClass("is-invalid");
+					}
+					else
+						parameter = "";
+					
+				if(valid){
+					
+				//AJAX Request
+				 $.ajax({
+					 url: "/IntegrateServlet", 
+					 data: {
+						 uri: uri,
+						 operationType: operationType,
+						 operationPath: operationPath,
+						 apiSpecification: apiSpecification,
+						 parameter: parameter,
+						idl:lines
+						},
+					 type:'post',
+					 success: function(data, textStatus, xhr){
+						 					 
+						 var messageBody="";
+						 
+						 if(analysisOperation == "isValidSpecification"){
+							 data = JSON.parse(data);
+								if(data.valid){
+									messageBody = "The specification is valid";
+									$('#messageBoxID').removeClass();
+									$("#messageBoxID").addClass("alert alert-success");
+								}
+								else{
+									messageBody = "The specification is invalid";
+									$('#messageBoxID').removeClass();
+									$("#messageBoxID").addClass("alert alert-warning");
+								} 
+								
+						 }
+						 
+						 //is Consistent
+						 
+						 if(analysisOperation == "isConsistent"){
+							 data = JSON.parse(data);
+							 
+							 if(data.consistent){
+									messageBody = "The specification is consistent";
+									$('#messageBoxID').removeClass();
+									$("#messageBoxID").addClass("alert alert-success");
+								}
+								else{
+									messageBody = "The specification is not consistent";
+									$('#messageBoxID').removeClass();
+									$("#messageBoxID").addClass("alert alert-warning");
+								}
+						
+						 }
+						  
+						 // is False Optional
+						 if(analysisOperation == "isFalseOptional"){
+							 data = JSON.parse(data);
+							 
+							 if(data.falseOptional){
+									messageBody = "The parameter is a false optional";
+									$('#messageBoxID').removeClass();
+									$("#messageBoxID").addClass("alert alert-warning"); 
+								}
+								else{
+									messageBody = "The parameter is not a false optional";
+									$('#messageBoxID').removeClass();
+									$("#messageBoxID").addClass("alert alert-success"); 
+								}
+						 }
+						 
+						 // is Dead Parameter
+						 
+						 if(analysisOperation == "isDeadParameter"){
+							 data = JSON.parse(data);
+							 
+							 if(data.deadParameter){
+									messageBody = "The parameter is dead";
+									$('#messageBoxID').removeClass();
+									$("#messageBoxID").addClass("alert alert-warning");  
+								}
+								else{
+									messageBody = "The parameter is not dead";
+									$('#messageBoxID').removeClass();
+									$("#messageBoxID").addClass("alert alert-success");
+								}
+						 }
+
+							    $('#messageBoxID').empty();
+								$("#messageBoxID").fadeIn('slow');								
+								$("#messageBoxID").append("<h4>Analysis Result: </h4>");
+								$("#messageBoxID").append(messageBody);
+								$('#messageBoxID').delay(5000).fadeOut('slow');						
+						
+						
+						},
+						error : function(jqXHR, status, errorThrown) {
+						
+							$('#messageBoxID').empty();
+							$('#messageBoxID').removeClass();
+							$("#messageBoxID").addClass("alert alert-danger").fadeIn('slow');
+							$("#messageBoxID").append("<h2>Error : </h2>");
+							$("#messageBoxID").append("An error has been occurred!");
+							$('#messageBoxID').delay(5000).fadeOut('slow');					
+						}
+			  
+					  }); // End of AJAX
+					  
+				} // End of if valid
+				
+				});
+				 
+				// End of Analysis Operations
+				
+			}); // End of $(document).ready
+		
+		});
+		 
+	});
+	 
+	
+	</script>
+</body>
+</html>
